@@ -28,6 +28,7 @@ struct Sphere {
   Vec3 position;
   uint32_t radius;
   uint32_t color;
+  uint32_t specular;
 };
 
 struct Light {
@@ -66,24 +67,35 @@ void intersected_ray(Vec3 O, Vec3 D, Sphere *sphere, float *results) {
   results[1] = (-b - sqrt_discriminant) / (2 * a);
 }
 
-float process_lights(Vec3 P, Vec3 N, Light *lights, uint32_t light_count) {
+float process_lights(Vec3 P, Vec3 N, Vec3 V, Light *lights, uint32_t light_count) {
   Light *light;
   float intensity = 0;
+  
+  float n_dot_l;
+  Vec3 L;
   for (int n = 0; n < light_count; n++) {
     light = &lights[n];
     if (light->type == ambient) {
       intensity = light->intensity;
     } else {
-      Vec3 L;
       if (light->type == point) {
         L = vec3_subtract(P, light->point.position);
       }
-      float n_dot_l = vec3_dot(N, L);
+      n_dot_l = vec3_dot(N, L);
       if (n_dot_l > 0) {
         intensity += light->intensity * n_dot_l / sqrtf(vec3_dot(N, N)) /
                      sqrtf(vec3_dot(L, L));
       }
     }
+  }
+
+  float s = 2;
+  if (s != -1) {
+    Vec3 R = vec3_subtract(vec3_scalar_multiply(n_dot_l, vec3_scalar_multiply(2, N)), L);
+    float r_dot_v = vec3_dot(R, V);
+    if (r_dot_v > 0) {
+      intensity += light->intensity * powf(r_dot_v / sqrtf(vec3_dot(R, R)) / sqrtf(vec3_dot(V,V)), s);
+    } 
   }
   return intensity;
 }
@@ -130,7 +142,8 @@ uint32_t ray_tracing(Vec3 O, Vec3 D, Sphere *spheres, uint32_t sphere_count,
   Vec3 P = vec3_add(O, vec3_scalar_multiply(closest_t, D));
   Vec3 N = vec3_subtract(closest_sphere->position, P);
   N = vec3_normalize(N);
-  float light_intensity = process_lights(P, N, lights, light_count);
+  Vec3 V = vec3_subtract(O, P);
+  float light_intensity = process_lights(P, N, V, lights, light_count);
   color = scale_intensity(color, light_intensity);
   return color;
 }
@@ -143,9 +156,9 @@ int main() {
 
   uint32_t sphere_count = 3;
   Sphere *spheres = malloc(sphere_count * sizeof(Sphere));
-  spheres[0] = (Sphere){{0, 1, 1}, 1, RGBA(255, 0, 0, 255)};
-  spheres[1] = (Sphere){{2, 0, 1}, 1, RGBA(120, 0, 120, 255)};
-  spheres[2] = (Sphere){{2, -502, 1}, 500, RGBA(100, 50, 0, 255)};
+  spheres[0] = (Sphere){{0, 1, 1}, 1, RGBA(255, 0, 0, 255), 500};
+  spheres[1] = (Sphere){{2, 0, 1}, 1, RGBA(120, 0, 120, 255), 500};
+  spheres[2] = (Sphere){{2, -502, 1}, 500, RGBA(100, 50, 0, 255), 500};
 
   uint32_t light_count = 2;
   Light *lights = malloc(light_count * sizeof(Light));
