@@ -157,13 +157,13 @@ int main() {
   uint32_t sphere_count = 3;
   Sphere *spheres = malloc(sphere_count * sizeof(Sphere));
   spheres[0] = (Sphere){{0, 1, 1}, 1, RGBA(255, 0, 0, 255), 500};
-  spheres[1] = (Sphere){{2, 0, 1}, 1, RGBA(120, 0, 120, 255), 500};
+  spheres[1] = (Sphere){{2, 0, 1}, 1, RGBA(120, 0, 120, 255), 1000};
   spheres[2] = (Sphere){{2, -502, 1}, 500, RGBA(100, 50, 0, 255), 500};
 
   uint32_t light_count = 2;
   Light *lights = malloc(light_count * sizeof(Light));
   lights[0] = (Light){ambient, 0.2};
-  lights[1] = (Light){point, 0.8, .point = {{-2, 5, -3}}};
+  lights[1] = (Light){point, 0.8, .point = {{-2, 1, -3}}};
   do {
     for (int x = -WIDTH / 2; x < WIDTH / 2; x++) {
       for (int y = -HEIGHT / 2; y < HEIGHT / 2; y++) {
